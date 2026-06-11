@@ -24,6 +24,7 @@ public class FrontControllerServlet extends HttpServlet {
 
     private void processRequest(HttpServletRequest req, HttpServletResponse res) 
             throws ServletException, IOException {
+        res.setContentType("text/html;charset=UTF-8");
         String uri = req.getRequestURI();
         PrintWriter out = res.getWriter();
 
