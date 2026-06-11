@@ -26,8 +26,7 @@ public class FrontControllerServlet extends HttpServlet {
 
     private void processRequest(String url, PrintWriter out) {
         out.println("<html><body>");
-        out.println("<h2>URL demandée :</h2>");
-        out.println("<p style='color:blue;font-size:1.2em'>" + url + "</p>");
+        out.println("<p>" + url + "</p>");
         out.println("</body></html>");
     }
 
