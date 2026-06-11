@@ -5,11 +5,11 @@ version="2.4">
     <display-name>Application WEB</display-name>
 
     <servlet>
-        <servlet-name></servlet-name>
-        <servlet-class></servlet-class>
+        <servlet-name>FrontControllerServlet</servlet-name>
+        <servlet-class>main.java.controllers.FrontControllerServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name></servlet-name>
+        <servlet-name>FrontControllerServlet</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
 
