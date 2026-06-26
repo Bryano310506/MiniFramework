@@ -6,7 +6,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Utils {
+public class ClassManager {
 
     public static List<String> intoString(List<Class<?>> listClass) {
         List<String> listString = new ArrayList<>();
@@ -41,7 +41,7 @@ public class Utils {
         return annotatedClasses;
     }
 
-    private static List<Class<?>> getClasses(String packageName)
+    public static List<Class<?>> getClasses(String packageName)
             throws Exception {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         String path = packageName.replace('.', '/');
