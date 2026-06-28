@@ -9,63 +9,65 @@ import java.util.List;
 import java.util.Map;
 
 import main.java.annotation.UrlMapping;
+import main.java.core.MethodTarget;
 
 public class MethodManager {
 
-    public static Map<String, List<String>> getInformationMethod(List<Method> listMethod) {
-        Map<String, List<String>> map = new HashMap<>();
+    public static Map<String, List<String>> getInformationMethod(Map<String, MethodTarget> map) {
+        Map<String, List<String>> mapList = new HashMap<>();
 
-        for (Method m : listMethod) {
-            Class<?> c = m.getDeclaringClass();
+        for (Map.Entry<String, MethodTarget> entry : map.entrySet()) {
+            String endpoint = entry.getKey();
+            MethodTarget target = entry.getValue();
+
+            List<String> infoList = new ArrayList<>();
             
-            String className = c.getName(); 
-            String methodName = m.getName();
-
-            if (!map.containsKey(className)) {
-                List<String> list = new ArrayList<>();
-                list.add(methodName);
-                map.put(className, list);
-            } else {
-                List<String> list = map.get(className);
-                list.add(methodName);
-            }
-        }
-
-        return map;
-    }
-
-    public static List<Method> filterMethodWithEndPoint(List<Method> listMethod, String endPoint, Class<? extends Annotation> annotation) {
-        List<Method> newListMethod = filterMethodWithAnnotation(listMethod, UrlMapping.class);
-        List<Method> newList = new ArrayList<>();
-
-        for(Method m : newListMethod) {
-            if (m.isAnnotationPresent(annotation)) {
-                try {
-                    Annotation ann = m.getAnnotation(annotation);
-                    Method valueMethod = ann.annotationType().getMethod("value");
-                    String value = (String) valueMethod.invoke(ann);
-                    if (endPoint.endsWith(value)) {
-                        newList.add(m);
-                    }
-                } catch (Exception e) {
-                    // System.err.println("L'annotation n'a pas de méthode value() : " + e.getMessage());
+            if (target != null && target.getMethod() != null) {
+                infoList.add("Classe: " + target.getClazz().getSimpleName());
+                infoList.add("Méthode: " + target.getMethod().getName());
+                
+                if (target.getMethod().isAnnotationPresent(UrlMapping.class)) {
+                    UrlMapping annotation = target.getMethod().getAnnotation(UrlMapping.class);
+                    infoList.add("HTTP: " + annotation.method());
                 }
             }
+
+            mapList.put(endpoint, infoList);
         }
 
-        return newList;
+        return mapList;
     }
 
-    public static List<Method> filterMethodWithAnnotation(List<Method> listMethod, Class<? extends Annotation> annotation) {
-        List<Method> newListMethod = new ArrayList<>();
+    public static Map<String, MethodTarget> filterMethodWithEndPoint(List<Method> listMethod, String endPoint) {
+        Map<String, MethodTarget> endpointMap = filterMethodWithAnnotation(listMethod);
+        Map<String, MethodTarget> endpointTrouver = new HashMap<>();
 
-        for(Method m : listMethod) {
-            if(m.isAnnotationPresent(annotation)) {
-                newListMethod.add(m);
+        for (String registeredUrl : endpointMap.keySet()) {
+            if (endPoint.endsWith(registeredUrl)) {
+                endpointTrouver.put(registeredUrl, endpointMap.get(registeredUrl));
             }
         }
 
-        return newListMethod;
+        return endpointTrouver;
+    }
+
+    public static Map<String, MethodTarget> filterMethodWithAnnotation(List<Method> listMethod) {
+        Map<String, MethodTarget> endpointMap = new HashMap<>();
+
+        for (Method m : listMethod) {
+            if (m.isAnnotationPresent(UrlMapping.class)) {
+                UrlMapping annotation = m.getAnnotation(UrlMapping.class);
+                String endpoint = annotation.value();
+
+                MethodTarget target = new MethodTarget();
+                target.setClazz(m.getDeclaringClass()); 
+                target.setMethod(m);
+
+                endpointMap.put(endpoint, target);
+            }
+        }
+
+        return endpointMap;
     }
 
     public static List<Method> getAllMethods(String packageName)
