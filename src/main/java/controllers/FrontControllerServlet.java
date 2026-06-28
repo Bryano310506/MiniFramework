@@ -3,16 +3,17 @@ package main.java.controllers;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import main.java.annotation.Controller;
-import main.java.annotation.UrlMapping;
+import main.java.core.MethodTarget;
 import main.java.utils.ClassManager;
 import main.java.utils.MethodManager;
 
@@ -47,39 +48,50 @@ public class FrontControllerServlet extends HttpServlet {
             throws ServletException, IOException {
         res.setContentType("text/plain;charset=UTF-8");
         String uri = req.getRequestURI();
+
+        filterRequest(req, res, uri);
+
         PrintWriter out = res.getWriter();
 
         printClasses(uri, out);
         out.println();
 
-        List<Method> showListFindMethods = new ArrayList<>();
-        List<Method> showListAllMethods = new ArrayList<>();
-        showListFindMethods = MethodManager.filterMethodWithEndPoint(listMethods, uri, UrlMapping.class);
-        showListAllMethods = MethodManager.filterMethodWithAnnotation(listMethods, UrlMapping.class);
+        Map<String, MethodTarget> showListFind = new HashMap<>();
+        Map<String, MethodTarget> showListAll = new HashMap<>();
+        showListFind = MethodManager.filterMethodWithEndPoint(listMethods, uri);
+        showListAll = MethodManager.filterMethodWithAnnotation(listMethods);
 
-        if(showListFindMethods.isEmpty()) {
+        if(showListFind.isEmpty()) {
             out.println("Aucun Method est associé à cette endpoint");
             out.println();
         } else {
-            Map<String, List<String>> mapTrouver = MethodManager.getInformationMethod(showListFindMethods);
+            Map<String, List<String>> mapTrouver = MethodManager.getInformationMethod(showListFind);
             out.println("L'information des methods associé à cette endpoint");
             printMethods(mapTrouver, out);
             out.println("===============================================");
         }
 
         out.println("Liste des methods existant avec l'annotation et ses informations");
-        Map<String, List<String>> map = MethodManager.getInformationMethod(showListAllMethods);
+        Map<String, List<String>> map = MethodManager.getInformationMethod(showListAll);
         printMethods(map, out);
 
     }
 
-    // private void filterRequest(String uri) {
-    //     if(uri.endsWith(".html") || uri.endsWith(".js") || uri.endsWith(".css") || uri.endsWith(".jsp")) {
-
-    //     }
-    // }
+    private void filterRequest(HttpServletRequest req, HttpServletResponse res, String uri) 
+            throws ServletException, IOException {
+        if(uri.endsWith(".html") || uri.endsWith(".js") || uri.endsWith(".css") || uri.endsWith(".jsp")) {
+            try {
+                String[] split = uri.split("/");
+                RequestDispatcher dispat = req.getRequestDispatcher(split[split.length - 1]);
+                dispat.forward(req, res);
+            } catch (ServletException | IOException e) {
+                throw e;
+            }
+        }
+    }
 
     private void printClasses(String uri, PrintWriter out) {
+        out.println(uri);
         out.println("Liste des classes :");
         for(String s : this.listClasses) {
             out.println("\t" + s);
@@ -91,7 +103,7 @@ public class FrontControllerServlet extends HttpServlet {
             String clazz = entry.getKey();
             List<String> methods = entry.getValue();
 
-            out.println("Classe : " + clazz);
+            out.println("EndPoint : " + clazz);
             for (String m : methods) {
                 out.println("\t-> " + m + "()");
             }
