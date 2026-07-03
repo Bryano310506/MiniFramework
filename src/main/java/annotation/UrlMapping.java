@@ -5,8 +5,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import main.java.core.HttpMethod;
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface UrlMapping {
-    public String value() default "/";
+    String value() default "/";
+    HttpMethod method();
 }
