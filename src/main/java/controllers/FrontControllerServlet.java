@@ -81,8 +81,7 @@ public class FrontControllerServlet extends HttpServlet {
             throws ServletException, IOException {
         if(uri.endsWith(".html") || uri.endsWith(".js") || uri.endsWith(".css") || uri.endsWith(".jsp")) {
             try {
-                String[] split = uri.split("/");
-                RequestDispatcher dispat = req.getRequestDispatcher(split[split.length - 1]);
+                RequestDispatcher dispat = req.getRequestDispatcher(uri);
                 dispat.forward(req, res);
             } catch (ServletException | IOException e) {
                 throw e;
