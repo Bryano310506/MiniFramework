@@ -69,6 +69,12 @@ public class FrontControllerServlet extends HttpServlet {
             out.println("L'information des methods associé à cette endpoint");
             printMethods(mapTrouver, out);
             out.println("===============================================");
+            
+            out.println("Execution du method associee");
+            showListFind.forEach((cle, methodTarget) -> {
+                MethodManager.executeMethod(methodTarget); 
+            });
+            out.println("===============================================");
         }
 
         out.println("Liste des methods existant avec l'annotation et ses informations");

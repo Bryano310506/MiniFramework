@@ -12,6 +12,15 @@ import main.java.core.MethodTarget;
 
 public class MethodManager {
 
+    public static void executeMethod(MethodTarget method) {
+        try {
+            Object instance = method.getClazz().getConstructor().newInstance();
+            method.getMethod().invoke(instance);
+        } catch(Exception e) {
+            System.out.println(e);
+        }
+    }
+
     public static Map<String, List<String>> getInformationMethod(Map<String, MethodTarget> map) {
         Map<String, List<String>> mapList = new HashMap<>();
 
