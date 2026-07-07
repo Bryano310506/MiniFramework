@@ -2,7 +2,6 @@ package main.java.controllers;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,25 +11,16 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import main.java.annotation.Controller;
+import main.java.core.GlobalConfig;
 import main.java.core.MethodTarget;
 import main.java.exception.UrlMappingException;
-import main.java.utils.ClassManager;
 import main.java.utils.MethodManager;
 
 public class FrontControllerServlet extends HttpServlet {
-    List<String> listClasses;
-    List<Method> listMethods;
+    GlobalConfig globalConfig;
 
     public void init() throws ServletException {
-        String initial = this.getInitParameter("Controller");
-        try {
-            listClasses = ClassManager.intoString(ClassManager.loadClasses(initial, Controller.class));
-            listMethods = MethodManager.getAllMethods(initial);
-        } catch(Exception e) {
-            e.printStackTrace();
-            listClasses = null;
-        }
+        globalConfig = (GlobalConfig) getServletContext().getAttribute("globalConfig");
     }
     
     @Override
@@ -60,15 +50,14 @@ public class FrontControllerServlet extends HttpServlet {
 
         // recuperation des methodes
         try {
-            showListFind = MethodManager.filterMethodWithEndPoint(listMethods, uri);
-            showListAll = MethodManager.filterMethodWithAnnotation(listMethods);
+            showListAll = MethodManager.filterMethodWithAnnotation(globalConfig.getListMethods());
+            showListFind = MethodManager.filterMethodWithEndPoint(globalConfig.getListMethods(), uri);
         } catch (UrlMappingException e) {
             out.println(e.getMessage());
         }
 
         // affichage
         if(showListFind.isEmpty()) {
-            out.println("\n");
             out.println("Aucun Method est associé à cette endpoint");
             out.println("\n");
             out.println("Voici les Listes des methods existant avec l'annotation et ses informations");
