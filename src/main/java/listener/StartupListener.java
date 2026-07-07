@@ -8,6 +8,7 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import main.java.annotation.Controller;
+import main.java.core.GlobalConfig;
 import main.java.utils.ClassManager;
 import main.java.utils.MethodManager;
 
@@ -16,6 +17,7 @@ public class StartupListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent event) {
         ServletContext context = event.getServletContext();
+        GlobalConfig globalConfig = new GlobalConfig();
 
         List<String> listClasses = new ArrayList<>();
         List<Method> listMethods = new ArrayList<>();
@@ -29,8 +31,10 @@ public class StartupListener implements ServletContextListener {
             listClasses = null;
         }
 
-        context.setAttribute("listClasses", listClasses);
-        context.setAttribute("listMethods", listMethods);
+        globalConfig.setListClasses(listClasses);
+        globalConfig.setListMethods(listMethods);
+
+        context.setAttribute("globalConfig", globalConfig);
     }
 
     @Override

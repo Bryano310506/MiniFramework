@@ -23,7 +23,6 @@ public class FrontControllerServlet extends HttpServlet {
     List<Method> listMethods;
 
     public void init() throws ServletException {
-        String initial = this.getInitParameter("Controller");
         try {
             listClasses = ClassManager.intoString(ClassManager.loadClasses(initial, Controller.class));
             listMethods = MethodManager.getAllMethods(initial);
