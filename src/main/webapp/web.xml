@@ -4,6 +4,10 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j
 version="2.4">
     <display-name>Application WEB</display-name>
 
+    <listener>
+        <listener-class>main.java.listener.StartupListener</listener-class>
+    </listener>
+
     <servlet>
         <servlet-name>FrontControllerServlet</servlet-name>
         <servlet-class>main.java.controllers.FrontControllerServlet</servlet-class>
