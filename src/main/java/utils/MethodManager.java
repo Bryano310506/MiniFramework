@@ -4,13 +4,27 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import main.java.annotation.UrlMapping;
+import main.java.core.HttpMethod;
 import main.java.core.MethodTarget;
+import main.java.core.RouteKey;
+import main.java.exception.UrlMappingException;
 
 public class MethodManager {
+
+    public static void executeMethod(MethodTarget method) {
+        try {
+            Object instance = method.getClazz().getConstructor().newInstance();
+            method.getMethod().invoke(instance);
+        } catch(Exception e) {
+            System.out.println(e);
+        }
+    }
 
     public static Map<String, List<String>> getInformationMethod(Map<String, MethodTarget> map) {
         Map<String, List<String>> mapList = new HashMap<>();
@@ -37,7 +51,8 @@ public class MethodManager {
         return mapList;
     }
 
-    public static Map<String, MethodTarget> filterMethodWithEndPoint(List<Method> listMethod, String endPoint) {
+    public static Map<String, MethodTarget> filterMethodWithEndPoint(List<Method> listMethod, String endPoint) 
+            throws UrlMappingException {
         Map<String, MethodTarget> endpointMap = filterMethodWithAnnotation(listMethod);
         Map<String, MethodTarget> endpointTrouver = new HashMap<>();
 
@@ -50,17 +65,26 @@ public class MethodManager {
         return endpointTrouver;
     }
 
-    public static Map<String, MethodTarget> filterMethodWithAnnotation(List<Method> listMethod) {
+    public static Map<String, MethodTarget> filterMethodWithAnnotation(List<Method> listMethod) 
+            throws UrlMappingException {
         Map<String, MethodTarget> endpointMap = new HashMap<>();
+        Set<RouteKey> routeUnique = new HashSet<>();
 
         for (Method m : listMethod) {
             if (m.isAnnotationPresent(UrlMapping.class)) {
                 UrlMapping annotation = m.getAnnotation(UrlMapping.class);
                 String endpoint = annotation.value();
+                HttpMethod httpMethod = annotation.method();
 
                 MethodTarget target = new MethodTarget();
                 target.setClazz(m.getDeclaringClass()); 
                 target.setMethod(m);
+
+                RouteKey routeKey = new RouteKey(endpoint, httpMethod);
+
+                if (!routeUnique.add(routeKey)) {
+                    throw new UrlMappingException("Un doublon a été détecté !! Veuillez le corriger");
+                }
 
                 endpointMap.put(endpoint, target);
             }
