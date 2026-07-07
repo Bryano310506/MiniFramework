@@ -17,10 +17,10 @@ import main.java.exception.UrlMappingException;
 import main.java.utils.MethodManager;
 
 public class FrontControllerServlet extends HttpServlet {
-    GlobalConfig globalConfig = (GlobalConfig) getServletContext().getAttribute("globalConfig");
+    GlobalConfig globalConfig;
 
     public void init() throws ServletException {
-        
+        globalConfig = (GlobalConfig) getServletContext().getAttribute("globalConfig");
     }
     
     @Override
@@ -58,7 +58,6 @@ public class FrontControllerServlet extends HttpServlet {
 
         // affichage
         if(showListFind.isEmpty()) {
-            out.println("\n");
             out.println("Aucun Method est associé à cette endpoint");
             out.println("\n");
             out.println("Voici les Listes des methods existant avec l'annotation et ses informations");
