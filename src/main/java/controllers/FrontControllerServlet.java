@@ -49,14 +49,14 @@ public class FrontControllerServlet extends HttpServlet {
             throws ServletException, IOException {
         res.setContentType("text/plain;charset=UTF-8");
         String uri = req.getRequestURI();
+        PrintWriter out = res.getWriter();
 
         // filtre des requetes
         filterRequest(req, res, uri);
 
-        PrintWriter out = res.getWriter();
-
         Map<String, MethodTarget> showListFind = new HashMap<>();
         Map<String, MethodTarget> showListAll = new HashMap<>();
+        Map<String, List<String>> map = new HashMap<>();
 
         // recuperation des methodes
         try {
@@ -72,12 +72,13 @@ public class FrontControllerServlet extends HttpServlet {
             out.println("Aucun Method est associé à cette endpoint");
             out.println("\n");
             out.println("Voici les Listes des methods existant avec l'annotation et ses informations");
-            Map<String, List<String>> map = MethodManager.getInformationMethod(showListAll);
+            map = MethodManager.getInformationMethod(showListAll);
             printMethods(map, out);
+
         } else {
-            Map<String, List<String>> mapTrouver = MethodManager.getInformationMethod(showListFind);
+            map = MethodManager.getInformationMethod(showListFind);
             out.println("L'information des methods associé à cette endpoint");
-            printMethods(mapTrouver, out);
+            printMethods(map, out);
             out.println("===============================================");
             
             // execution du methode associee
@@ -85,9 +86,10 @@ public class FrontControllerServlet extends HttpServlet {
             showListFind.forEach((cle, methodTarget) -> {
                 MethodManager.executeMethod(methodTarget); 
             });
-            out.println("===============================================");
-        }
 
+            out.println("===============================================");
+
+        }
     }
 
     private void filterRequest(HttpServletRequest req, HttpServletResponse res, String uri) 
