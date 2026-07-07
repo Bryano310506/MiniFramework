@@ -102,13 +102,13 @@ public class FrontControllerServlet extends HttpServlet {
         }
     }
 
-    private void printClasses(String uri, PrintWriter out) {
-        out.println(uri);
-        out.println("Liste des classes :");
-        for(String s : this.listClasses) {
-            out.println("\t" + s);
-        }
-    }
+    // private void printClasses(String uri, PrintWriter out) {
+    //     out.println(uri);
+    //     out.println("Liste des classes :");
+    //     for(String s : this.listClasses) {
+    //         out.println("\t" + s);
+    //     }
+    // }
 
     private void printMethods(Map<String, List<String>> map, PrintWriter out) {
         for (Map.Entry<String, List<String>> entry : map.entrySet()) {
