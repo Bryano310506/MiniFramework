@@ -17,12 +17,13 @@ import main.java.exception.UrlMappingException;
 
 public class MethodManager {
 
-    public static void executeMethod(MethodTarget method) {
+    public static Object executeMethod(MethodTarget method) 
+            throws Exception {
         try {
             Object instance = method.getClazz().getConstructor().newInstance();
-            method.getMethod().invoke(instance);
+            return method.getMethod().invoke(instance);
         } catch(Exception e) {
-            System.out.println(e);
+            throw e;
         }
     }
 
