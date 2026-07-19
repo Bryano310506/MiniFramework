@@ -2,6 +2,7 @@ package main.java.controllers;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,14 +14,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import main.java.core.GlobalConfig;
 import main.java.core.MethodTarget;
+import main.java.core.ModelAndView;
 import main.java.exception.UrlMappingException;
 import main.java.utils.MethodManager;
+import main.java.utils.ViewManager;
 
 public class FrontControllerServlet extends HttpServlet {
     GlobalConfig globalConfig;
+    String suffix;
+    String prefix;
 
     public void init() throws ServletException {
         globalConfig = (GlobalConfig) getServletContext().getAttribute("globalConfig");
+        this.prefix = getInitParameter("prefix");
+        this.suffix = getInitParameter("suffix");
     }
     
     @Override
@@ -65,19 +72,44 @@ public class FrontControllerServlet extends HttpServlet {
             printMethods(map, out);
 
         } else {
-            map = MethodManager.getInformationMethod(showListFind);
-            out.println("L'information des methods associé à cette endpoint");
-            printMethods(map, out);
-            out.println("===============================================");
+            List<MethodTarget> targets = new ArrayList<>(showListFind.values());
+            MethodTarget methodTarget = targets.get(0);
             
-            // execution du methode associee
-            out.println("Execution du method associee");
-            showListFind.forEach((cle, methodTarget) -> {
-                MethodManager.executeMethod(methodTarget); 
-            });
+            try {
+                Object result = MethodManager.executeMethod(methodTarget); 
+                
+                if (result instanceof ModelAndView) {
+                    ModelAndView mv = (ModelAndView) result;
+                    
+                    this.flush(req, res, mv);
+                } else {
+                    map = MethodManager.getInformationMethod(showListFind);
+                    out.println("L'URL a été trouvée, mais la méthode n'a pas retourné un ModelAndView.");
+                    out.println("Type retourné : " + (result != null ? result.getClass().getName() : "null"));
+                    out.println("===============================================");
+                    printMethods(map, out);
+                }
+            } catch (Exception e) {
+                out.println("Erreur lors de l'exécution : " + e.getMessage());
+                e.printStackTrace(out);
+            }
+        }
+    }
 
-            out.println("===============================================");
-
+    private void flush(HttpServletRequest req, HttpServletResponse res, ModelAndView mv) 
+            throws ServletException, IOException{
+        String page = mv.getView();
+        Map<String, Object> map = mv.getAttributes();
+        for(Map.Entry<String, Object> e : map.entrySet()) {
+            String attributName = e.getKey();
+            Object attributeValue = e.getValue();
+            req.setAttribute(attributName, attributeValue);
+        }
+        try {
+            RequestDispatcher dispat = req.getRequestDispatcher(ViewManager.createViewPath(prefix, suffix, page));
+            dispat.forward(req, res); 
+        } catch(ServletException | IOException e) {
+            throw e;
         }
     }
 
