@@ -57,8 +57,9 @@ public class FrontControllerServlet extends HttpServlet {
 
         // recuperation des methodes
         try {
-            showListAll = MethodManager.filterMethodWithAnnotation(globalConfig.getListMethods());
-            showListFind = MethodManager.filterMethodWithEndPoint(globalConfig.getListMethods(), uri);
+            String methodHttp = req.getMethod();
+            showListAll = MethodManager.filterMethodWithAnnotationAndHttpMethod(globalConfig.getListMethods(), methodHttp);
+            showListFind = MethodManager.filterMethodWithEndPoint(globalConfig.getListMethods(), methodHttp, uri);
         } catch (UrlMappingException e) {
             out.println(e.getMessage());
         }
