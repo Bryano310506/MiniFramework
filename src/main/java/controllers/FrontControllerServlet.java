@@ -2,16 +2,24 @@ package main.java.controllers;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSerializer;
+import com.google.gson.JsonPrimitive;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import main.java.annotation.WebAPI;
 import main.java.core.GlobalConfig;
 import main.java.core.MethodTarget;
 import main.java.core.ModelAndView;
@@ -75,18 +83,30 @@ public class FrontControllerServlet extends HttpServlet {
         } else {
             List<MethodTarget> targets = new ArrayList<>(showListFind.values());
             MethodTarget methodTarget = targets.get(0);
-            
-            try {
+            Method m = methodTarget.getMethod();
+
+            try {       
                 Object result = MethodManager.executeMethod(methodTarget); 
                 
                 if (result instanceof ModelAndView) {
                     ModelAndView mv = (ModelAndView) result;
                     
                     this.flush(req, res, mv);
+                } else if(m.isAnnotationPresent(WebAPI.class)) {
+                    res.setContentType("application/json");
+                    res.setCharacterEncoding("UTF-8");
+                    
+                    Gson gson = new GsonBuilder()
+                        .registerTypeAdapter(LocalDate.class, (JsonSerializer<LocalDate>) (src, typeOfSrc, context) -> new JsonPrimitive(src.toString()))
+                        .create();
+                        
+                    String json = gson.toJson(result);
+                    res.getWriter().write(json);
                 } else {
                     map = MethodManager.getInformationMethod(showListFind);
                     out.println("L'URL a été trouvée, mais la méthode n'a pas retourné un ModelAndView.");
-                    out.println("Type retourné : " + (result != null ? result.getClass().getName() : "null"));
+                    out.println("Type retourné : " + (result != null ? result.getClass().getName() : "void"));
+                    out.println("Misy annotation webapi : " + m.isAnnotationPresent(WebAPI.class));
                     out.println("===============================================");
                     printMethods(map, out);
                 }
