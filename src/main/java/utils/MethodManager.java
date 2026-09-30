@@ -52,9 +52,9 @@ public class MethodManager {
         return mapList;
     }
 
-    public static Map<String, MethodTarget> filterMethodWithEndPoint(List<Method> listMethod, String endPoint) 
+    public static Map<String, MethodTarget> filterMethodWithEndPoint(List<Method> listMethod, String methodHttp, String endPoint) 
             throws UrlMappingException {
-        Map<String, MethodTarget> endpointMap = filterMethodWithAnnotation(listMethod);
+        Map<String, MethodTarget> endpointMap = filterMethodWithAnnotationAndHttpMethod(listMethod, methodHttp);
         Map<String, MethodTarget> endpointTrouver = new HashMap<>();
 
         for (String registeredUrl : endpointMap.keySet()) {
@@ -66,7 +66,7 @@ public class MethodManager {
         return endpointTrouver;
     }
 
-    public static Map<String, MethodTarget> filterMethodWithAnnotation(List<Method> listMethod) 
+    public static Map<String, MethodTarget> filterMethodWithAnnotationAndHttpMethod(List<Method> listMethod, String methodHttp) 
             throws UrlMappingException {
         Map<String, MethodTarget> endpointMap = new HashMap<>();
         Set<RouteKey> routeUnique = new HashSet<>();
@@ -82,6 +82,10 @@ public class MethodManager {
                 target.setMethod(m);
 
                 RouteKey routeKey = new RouteKey(endpoint, httpMethod);
+
+                if (!methodHttp.equals(httpMethod.name())) {
+                    continue;
+                }
 
                 if (!routeUnique.add(routeKey)) {
                     throw new UrlMappingException("Un doublon a été détecté !! Veuillez le corriger");
