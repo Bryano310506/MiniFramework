@@ -108,6 +108,16 @@ public class MethodManager {
         return listMethod;      
     }
 
+    public static  Object[] getAllArgsValue(Method method, Map<Parameter, String> map) {
+        Parameter[] params = method.getParameters();
+        Object[] args = new Object[map.size()];
+        for (int i = 0; i < params.length; i++) {
+            String value = map.get(params[i]);   // null si absent -> valeur par défaut
+            args[i] = Utilitaire.conversionType(params[i], value);
+        }
+        return  args;
+    }
+
     public static Map<Parameter, String> matchingParameter(MethodTarget mt, Map<String, String[]> params) {
         Map<Parameter, String> result = new HashMap<>();
         Parameter[] parameters = mt.getMethod().getParameters();
