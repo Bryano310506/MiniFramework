@@ -18,14 +18,10 @@ import main.java.exception.UrlMappingException;
 
 public class MethodManager {
 
-    public static Object executeMethod(MethodTarget method) 
+    public static Object executeMethod(MethodTarget mt, Object[] args) 
             throws Exception {
-        try {
-            Object instance = method.getClazz().getConstructor().newInstance();
-            return method.getMethod().invoke(instance);
-        } catch(Exception e) {
-            throw e;
-        }
+        Object instance = mt.getClazz().getConstructor().newInstance();
+        return mt.getMethod().invoke(instance, args);
     }
 
     public static Map<String, List<String>> getInformationMethod(Map<String, MethodTarget> map) {
