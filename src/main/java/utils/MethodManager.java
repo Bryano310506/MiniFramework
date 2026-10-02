@@ -1,6 +1,7 @@
 package main.java.utils;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -109,6 +110,24 @@ public class MethodManager {
         }
 
         return listMethod;      
+    }
+
+    public static Map<Parameter, String> matchingParameter(MethodTarget mt, Map<String, String[]> params) {
+        Map<Parameter, String> result = new HashMap<>();
+        Parameter[] parameters = mt.getMethod().getParameters();
+
+        for(Map.Entry<String, String[]> map : params.entrySet()) {
+            String name = map.getKey();
+            String value = map.getValue()[0];
+
+            for(Parameter p : parameters) {
+                if(p.getName().equals(name)) {
+                    result.put(p, value);
+                }
+            }
+        }
+
+        return result;
     }
 
 }
