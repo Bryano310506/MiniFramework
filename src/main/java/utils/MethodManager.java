@@ -108,31 +108,27 @@ public class MethodManager {
         return listMethod;      
     }
 
-    public static  Object[] getAllArgsValue(Method method, Map<Parameter, String> map) {
-        Parameter[] params = method.getParameters();
-        Object[] args = new Object[map.size()];
+    public static Object[] getAllArgsValue(MethodTarget mt, Map<Parameter, String> map) {
+        Parameter[] params = mt.getMethod().getParameters();
+        Object[] args = new Object[params.length]; 
+
         for (int i = 0; i < params.length; i++) {
-            String value = map.get(params[i]);   // null si absent -> valeur par défaut
-            args[i] = Utilitaire.conversionType(params[i], value);
+            Parameter param = params[i];
+            String value = map.get(param);  
+            
+            args[i] = Utilitaire.conversionType(param, value);
         }
-        return  args;
+        return args;
     }
 
     public static Map<Parameter, String> matchingParameter(MethodTarget mt, Map<String, String[]> params) {
         Map<Parameter, String> result = new HashMap<>();
-        Parameter[] parameters = mt.getMethod().getParameters();
 
-        for(Map.Entry<String, String[]> map : params.entrySet()) {
-            String name = map.getKey();
-            String value = map.getValue()[0];
-
-            for(Parameter p : parameters) {
-                if(p.getName().equals(name)) {
-                    result.put(p, value);
-                }
-            }
+        for (Parameter p : mt.getMethod().getParameters()) {
+            String[] values = params.get(p.getName());
+            String value = (values != null && values.length > 0) ? values[0] : null;
+            result.put(p, value);
         }
-
         return result;
     }
 

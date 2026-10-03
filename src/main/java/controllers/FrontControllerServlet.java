@@ -3,6 +3,7 @@ package main.java.controllers;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -85,8 +86,11 @@ public class FrontControllerServlet extends HttpServlet {
             MethodTarget methodTarget = targets.get(0);
             Method m = methodTarget.getMethod();
 
-            try {       
-                Object result = MethodManager.executeMethod(methodTarget); 
+            try {
+                Map<String, String[]> paramsForm = req.getParameterMap();
+                Map<Parameter, String> matchingMap = MethodManager.matchingParameter(methodTarget, paramsForm);
+                Object[] args = MethodManager.getAllArgsValue(methodTarget, matchingMap);
+                Object result = MethodManager.executeMethod(methodTarget, args); 
                 
                 if (result instanceof ModelAndView) {
                     ModelAndView mv = (ModelAndView) result;
@@ -106,7 +110,6 @@ public class FrontControllerServlet extends HttpServlet {
                     map = MethodManager.getInformationMethod(showListFind);
                     out.println("L'URL a été trouvée, mais la méthode n'a pas retourné un ModelAndView.");
                     out.println("Type retourné : " + (result != null ? result.getClass().getName() : "void"));
-                    out.println("Misy annotation webapi : " + m.isAnnotationPresent(WebAPI.class));
                     out.println("===============================================");
                     printMethods(map, out);
                 }
