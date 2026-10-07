@@ -16,7 +16,7 @@ mkdir -p $BUILD_DIR/lib
 
 # Compilation des fichiers Java avec le JAR des Servlets
 find $SRC_DIR -name "*.java" > sources.txt
-javac -cp ".:lib/*" -d $BUILD_DIR/classes @sources.txt
+javac -cp ".:lib/*" -parameters -d $BUILD_DIR/classes @sources.txt
 rm sources.txt
 
 # Copier les ressources (sql, etc.) dans classes

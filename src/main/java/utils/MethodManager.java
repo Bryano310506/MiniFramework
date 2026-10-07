@@ -1,6 +1,7 @@
 package main.java.utils;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,14 +18,10 @@ import main.java.exception.UrlMappingException;
 
 public class MethodManager {
 
-    public static Object executeMethod(MethodTarget method) 
+    public static Object executeMethod(MethodTarget mt, Object[] args) 
             throws Exception {
-        try {
-            Object instance = method.getClazz().getConstructor().newInstance();
-            return method.getMethod().invoke(instance);
-        } catch(Exception e) {
-            throw e;
-        }
+        Object instance = mt.getClazz().getConstructor().newInstance();
+        return mt.getMethod().invoke(instance, args);
     }
 
     public static Map<String, List<String>> getInformationMethod(Map<String, MethodTarget> map) {
@@ -109,6 +106,30 @@ public class MethodManager {
         }
 
         return listMethod;      
+    }
+
+    public static Object[] getAllArgsValue(MethodTarget mt, Map<Parameter, String> map) {
+        Parameter[] params = mt.getMethod().getParameters();
+        Object[] args = new Object[params.length]; 
+
+        for (int i = 0; i < params.length; i++) {
+            Parameter param = params[i];
+            String value = map.get(param);  
+            
+            args[i] = Utilitaire.conversionType(param, value);
+        }
+        return args;
+    }
+
+    public static Map<Parameter, String> matchingParameter(MethodTarget mt, Map<String, String[]> params) {
+        Map<Parameter, String> result = new HashMap<>();
+
+        for (Parameter p : mt.getMethod().getParameters()) {
+            String[] values = params.get(p.getName());
+            String value = (values != null && values.length > 0) ? values[0] : null;
+            result.put(p, value);
+        }
+        return result;
     }
 
 }
