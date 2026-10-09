@@ -59,7 +59,7 @@ public class Utilitaire {
         throw new IllegalArgumentException("Type non supporté : " + clazz.getName());
     }
 
-    private static Object valeurParDefaut(Class<?> clazz) {
+    public static Object valeurParDefaut(Class<?> clazz) {
         if (clazz == int.class || clazz == Integer.class)       return 0;
         if (clazz == long.class || clazz == Long.class)         return 0L;
         if (clazz == double.class || clazz == Double.class)     return 0.0;
@@ -68,8 +68,11 @@ public class Utilitaire {
         if (clazz == byte.class || clazz == Byte.class)         return (byte) 0;
         if (clazz == boolean.class || clazz == Boolean.class)   return false;
         if (clazz == char.class || clazz == Character.class)    return '\0';
+        if (clazz == String.class )                             return "";  
         if (clazz == BigDecimal.class)                          return BigDecimal.ZERO;
         if (clazz == BigInteger.class)                          return BigInteger.ZERO;
+        if (clazz == LocalDate.class)                           return LocalDate.now();
+        if (clazz == LocalDateTime.class)                       return LocalDateTime.now();
 
         // String, dates, enums, objets personnalisés... : null
         return null;
