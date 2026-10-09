@@ -1,5 +1,6 @@
 package main.java.utils;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
@@ -9,6 +10,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.beanutils2.BeanUtils;
 
 import main.java.annotation.UrlMapping;
 import main.java.core.HttpMethod;
@@ -108,26 +111,78 @@ public class MethodManager {
         return listMethod;      
     }
 
-    public static Object[] getAllArgsValue(MethodTarget mt, Map<Parameter, String> map) {
+    public static Object[] getAllArgsValue(MethodTarget mt, Map<Parameter, List<String>> map) 
+            throws IllegalAccessException, InvocationTargetException, InstantiationException, 
+                    IllegalArgumentException, NoSuchMethodException, SecurityException {
         Parameter[] params = mt.getMethod().getParameters();
         Object[] args = new Object[params.length]; 
 
         for (int i = 0; i < params.length; i++) {
             Parameter param = params[i];
-            String value = map.get(param);  
-            
-            args[i] = Utilitaire.conversionType(param, value);
+            Class<?> paramType = param.getType();
+
+            List<String> values = map.get(param);
+
+            if (values == null || values.isEmpty()) {
+                args[i] = Utilitaire.valeurParDefaut(paramType);
+                continue;
+            }
+
+            String[] names = values.get(0).split("::");
+
+            if (values.size() == 1 && names.length == 1) {
+                args[i] = Utilitaire.conversionType(param, values.get(0));
+                continue;
+            }
+
+            else {
+                Object objectInstance = paramType.getDeclaredConstructor().newInstance();
+                
+                Map<String, String> beanMap = new HashMap<>();
+                for (String item : values) {
+                    if (item != null && item.contains("::")) {
+                        String[] parts = item.split("::", 2); // Découpe en max 2 parties
+                        String attrName = parts[0];
+                        String attrValue = (parts.length > 1) ? parts[1] : "";
+                        
+                        beanMap.put(attrName, attrValue);
+                    }
+                }
+
+                if (!beanMap.isEmpty()) {
+                    BeanUtils.populate(objectInstance, beanMap);
+                }
+                args[i] = objectInstance;
+            }
         }
         return args;
     }
 
-    public static Map<Parameter, String> matchingParameter(MethodTarget mt, Map<String, String[]> params) {
-        Map<Parameter, String> result = new HashMap<>();
+    // contrainte nom attribut input == nom parametre
+    public static Map<Parameter, List<String>> matchingParameter(MethodTarget mt, Map<String, String[]> params) {
+        Map<Parameter, List<String>> result = new HashMap<>();
 
         for (Parameter p : mt.getMethod().getParameters()) {
-            String[] values = params.get(p.getName());
-            String value = (values != null && values.length > 0) ? values[0] : null;
-            result.put(p, value);
+            List<String> listValeur = new ArrayList<>();
+
+            if (Utilitaire.valeurParDefaut(p.getType()) != null) {
+                String[] values = params.get(p.getName());
+                if (values != null) {
+                    listValeur.addAll(Arrays.asList(values));
+                }
+                result.put(p, listValeur);
+                continue;
+            }
+
+            for (Map.Entry<String, String[]> entry : params.entrySet()) {
+                String[] names = entry.getKey().split("\\.");
+                if (names.length == 2 && names[0].equals(p.getName())) {
+                    for (String s : entry.getValue()) {
+                        listValeur.add(names[1] + "::" + s);
+                    }
+                }
+            }
+            result.put(p, listValeur);
         }
         return result;
     }
