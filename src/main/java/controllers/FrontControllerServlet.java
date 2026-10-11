@@ -88,7 +88,7 @@ public class FrontControllerServlet extends HttpServlet {
 
             try {
                 Map<String, String[]> paramsForm = req.getParameterMap();
-                Map<Parameter, String> matchingMap = MethodManager.matchingParameter(methodTarget, paramsForm);
+                Map<Parameter, List<String>> matchingMap = MethodManager.matchingParameter(methodTarget, paramsForm);
                 Object[] args = MethodManager.getAllArgsValue(methodTarget, matchingMap);
                 Object result = MethodManager.executeMethod(methodTarget, args); 
                 
@@ -103,7 +103,7 @@ public class FrontControllerServlet extends HttpServlet {
                     Gson gson = new GsonBuilder()
                         .registerTypeAdapter(LocalDate.class, (JsonSerializer<LocalDate>) (src, typeOfSrc, context) -> new JsonPrimitive(src.toString()))
                         .create();
-                        
+                    
                     String json = gson.toJson(result);
                     res.getWriter().write(json);
                 } else {
