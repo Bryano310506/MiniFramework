@@ -33,5 +33,10 @@ public class FileTarget {
     public void setFichiers(byte[] fichiers) {
         this.fichiers = fichiers;
     }
+
+    @Override
+    public String toString() {
+        return nom;
+    }
     
 }
