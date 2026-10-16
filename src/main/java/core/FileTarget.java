@@ -1,5 +1,7 @@
 package main.java.core;
 
+import java.nio.file.*;
+
 /**
  * FileTarget
  */
@@ -34,9 +36,18 @@ public class FileTarget {
         this.fichiers = fichiers;
     }
 
+     public String getFileName() {
+        return nom + "." + extension;
+    }
+
     @Override
     public String toString() {
         return nom;
+    }
+
+    public void upload(String path) throws Exception {
+        Path filePath = Paths.get(path, getFileName());
+        Files.write(filePath, this.fichiers);
     }
     
 }
