@@ -1,5 +1,6 @@
 package main.java.utils;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -13,7 +14,12 @@ import java.util.Set;
 
 import org.apache.commons.beanutils2.BeanUtils;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Part;
+
 import main.java.annotation.UrlMapping;
+import main.java.core.FileTarget;
 import main.java.core.HttpMethod;
 import main.java.core.MethodTarget;
 import main.java.core.RouteKey;
@@ -111,7 +117,7 @@ public class MethodManager {
         return listMethod;      
     }
 
-    public static Object[] getAllArgsValue(MethodTarget mt, Map<Parameter, List<String>> map) 
+    public static Object[] getAllArgsValue(MethodTarget mt, Map<Parameter, ? extends List<?>> map) 
             throws IllegalAccessException, InvocationTargetException, InstantiationException, 
                     IllegalArgumentException, NoSuchMethodException, SecurityException {
         Parameter[] params = mt.getMethod().getParameters();
@@ -121,17 +127,23 @@ public class MethodManager {
             Parameter param = params[i];
             Class<?> paramType = param.getType();
 
-            List<String> values = map.get(param);
+            List<?> values = map.get(param);
 
             if (values == null || values.isEmpty()) {
                 args[i] = Utilitaire.valeurParDefaut(paramType);
                 continue;
             }
 
-            String[] names = values.get(0).split("::");
+            if (values.get(0) instanceof FileTarget) {
+                args[i] = values.get(0);
+                continue;
+            }
+
+            String firstValue = (String) values.get(0);
+            String[] names = firstValue.split("::");
 
             if (values.size() == 1 && names.length == 1) {
-                args[i] = Utilitaire.conversionType(param, values.get(0));
+                args[i] = Utilitaire.conversionType(param, firstValue);
                 continue;
             }
 
@@ -139,7 +151,8 @@ public class MethodManager {
                 Object objectInstance = paramType.getDeclaredConstructor().newInstance();
                 
                 Map<String, String> beanMap = new HashMap<>();
-                for (String item : values) {
+                for (Object value : values) {
+                    String item = (String) value;
                     if (item != null && item.contains("::")) {
                         String[] parts = item.split("::", 2); // Découpe en max 2 parties
                         String attrName = parts[0];
@@ -159,8 +172,8 @@ public class MethodManager {
     }
 
     // contrainte nom attribut input == nom parametre
-    public static Map<Parameter, List<String>> matchingParameter(MethodTarget mt, Map<String, String[]> params) {
-        Map<Parameter, List<String>> result = new HashMap<>();
+    public static Map<Parameter, List<?>> matchingParameter(MethodTarget mt, Map<String, String[]> params) {
+        Map<Parameter, List<?>> result = new HashMap<>();
 
         for (Parameter p : mt.getMethod().getParameters()) {
             List<String> listValeur = new ArrayList<>();
@@ -185,6 +198,52 @@ public class MethodManager {
             result.put(p, listValeur);
         }
         return result;
+    }
+
+    public static Map<Parameter, List<?>> matchingMultipartParameter(MethodTarget mt, HttpServletRequest request)
+            throws IOException, ServletException {
+        Map<Parameter, List<?>> result = new HashMap<>();
+
+        for (Parameter parameter : mt.getMethod().getParameters()) {
+            List<Object> values = new ArrayList<>();
+            String parameterName = parameter.getName();
+
+            if (parameter.getType() == FileTarget.class) {
+                Part part = request.getPart(parameterName);
+                if (part != null && part.getSubmittedFileName() != null
+                        && !part.getSubmittedFileName().isBlank()) {
+                    values.add(toFileTarget(part));
+                }
+            } else if (Utilitaire.valeurParDefaut(parameter.getType()) != null) {
+                String[] parameterValues = request.getParameterValues(parameterName);
+                if (parameterValues != null) {
+                    values.addAll(Arrays.asList(parameterValues));
+                }
+            } else {
+                for (Part part : request.getParts()) {
+                    String partName = part.getName();
+                    if (partName.startsWith(parameterName + ".") && part.getSubmittedFileName() == null) {
+                        String attributeName = partName.substring(parameterName.length() + 1);
+                        values.add(attributeName + "::" + request.getParameter(partName));
+                    }
+                }
+            }
+            result.put(parameter, values);
+        }
+        return result;
+    }
+
+    private static FileTarget toFileTarget(Part part) throws IOException {
+        String submittedFileName = part.getSubmittedFileName();
+        String fileName = submittedFileName.substring(Math.max(
+                submittedFileName.lastIndexOf('/'), submittedFileName.lastIndexOf('\\')) + 1);
+        int extensionIndex = fileName.lastIndexOf('.');
+
+        FileTarget file = new FileTarget();
+        file.setNom(extensionIndex > 0 ? fileName.substring(0, extensionIndex) : fileName);
+        file.setExtension(extensionIndex > 0 ? fileName.substring(extensionIndex + 1) : "");
+        file.setFichiers(part.getInputStream().readAllBytes());
+        return file;
     }
 
 }

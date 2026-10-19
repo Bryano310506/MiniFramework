@@ -17,6 +17,7 @@ import com.google.gson.JsonPrimitive;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,15 +29,18 @@ import main.java.exception.UrlMappingException;
 import main.java.utils.MethodManager;
 import main.java.utils.ViewManager;
 
+@MultipartConfig
 public class FrontControllerServlet extends HttpServlet {
     GlobalConfig globalConfig;
     String suffix;
     String prefix;
+    String downloadPath;
 
     public void init() throws ServletException {
         globalConfig = (GlobalConfig) getServletContext().getAttribute("globalConfig");
         this.prefix = getInitParameter("prefix");
         this.suffix = getInitParameter("suffix");
+        this.downloadPath = getInitParameter("downloadPath");
     }
     
     @Override
@@ -87,8 +91,13 @@ public class FrontControllerServlet extends HttpServlet {
             Method m = methodTarget.getMethod();
 
             try {
-                Map<String, String[]> paramsForm = req.getParameterMap();
-                Map<Parameter, List<String>> matchingMap = MethodManager.matchingParameter(methodTarget, paramsForm);
+                Map<Parameter, List<?>> matchingMap;
+                if (isMultipartRequest(req)) {
+                    matchingMap = MethodManager.matchingMultipartParameter(methodTarget, req);
+                } else {
+                    Map<String, String[]> paramsForm = req.getParameterMap();
+                    matchingMap = MethodManager.matchingParameter(methodTarget, paramsForm);
+                }
                 Object[] args = MethodManager.getAllArgsValue(methodTarget, matchingMap);
                 Object result = MethodManager.executeMethod(methodTarget, args); 
                 
@@ -118,6 +127,11 @@ public class FrontControllerServlet extends HttpServlet {
                 e.printStackTrace(out);
             }
         }
+    }
+
+    private boolean isMultipartRequest(HttpServletRequest req) {
+        String contentType = req.getContentType();
+        return contentType != null && contentType.toLowerCase().startsWith("multipart/");
     }
 
     private void flush(HttpServletRequest req, HttpServletResponse res, ModelAndView mv) 
