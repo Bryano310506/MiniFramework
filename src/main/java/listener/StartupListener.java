@@ -9,8 +9,10 @@ import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import main.java.annotation.Controller;
 import main.java.core.GlobalConfig;
+import main.java.core.MySession;
 import main.java.utils.ClassManager;
 import main.java.utils.MethodManager;
+import main.java.utils.SessionManager;
 
 public class StartupListener implements ServletContextListener {
     
@@ -18,6 +20,7 @@ public class StartupListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent event) {
         ServletContext context = event.getServletContext();
         GlobalConfig globalConfig = new GlobalConfig();
+        SessionManager sessionManager = new SessionManager();
 
         List<String> listClasses = new ArrayList<>();
         List<Method> listMethods = new ArrayList<>();
@@ -35,6 +38,7 @@ public class StartupListener implements ServletContextListener {
         globalConfig.setListMethods(listMethods);
 
         context.setAttribute("globalConfig", globalConfig);
+        context.setAttribute("sessionManager", sessionManager);
     }
 
     @Override
