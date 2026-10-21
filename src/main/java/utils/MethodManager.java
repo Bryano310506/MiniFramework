@@ -16,12 +16,14 @@ import org.apache.commons.beanutils2.BeanUtils;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
 import main.java.annotation.UrlMapping;
 import main.java.core.FileTarget;
 import main.java.core.HttpMethod;
 import main.java.core.MethodTarget;
+import main.java.core.MySession;
 import main.java.core.RouteKey;
 import main.java.exception.UrlMappingException;
 
@@ -139,6 +141,11 @@ public class MethodManager {
                 continue;
             }
 
+            if (values.get(0) instanceof MySession) {
+                args[i] = values.get(0);
+                continue;
+            }
+
             String firstValue = (String) values.get(0);
             String[] names = firstValue.split("::");
 
@@ -177,8 +184,12 @@ public class MethodManager {
         Map<Parameter, List<?>> result = new HashMap<>();
 
         for (Parameter p : mt.getMethod().getParameters()) {
-            List<String> listValeur = new ArrayList<>();
+            List<Object> listValeur = new ArrayList<>();
 
+            if (p.getType() == MySession.class) {
+                listValeur.add(toMySession(request));
+            }
+            
             if (Utilitaire.valeurParDefaut(p.getType()) != null) {
                 String[] values = params.get(p.getName());
                 if (values != null) {
@@ -215,7 +226,11 @@ public class MethodManager {
                         && !part.getSubmittedFileName().isBlank()) {
                     values.add(toFileTarget(part));
                 }
-            } else if (Utilitaire.valeurParDefaut(parameter.getType()) != null) {
+            } 
+            else if (parameter.getType() == MySession.class) {
+                values.add(toMySession(request));
+            }
+            else if (Utilitaire.valeurParDefaut(parameter.getType()) != null) {
                 String[] parameterValues = request.getParameterValues(parameterName);
                 if (parameterValues != null) {
                     values.addAll(Arrays.asList(parameterValues));
@@ -245,6 +260,11 @@ public class MethodManager {
         file.setExtension(extensionIndex > 0 ? fileName.substring(extensionIndex + 1) : "");
         file.setFichiers(part.getInputStream().readAllBytes());
         return file;
+    }
+
+    private static MySession toMySession(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        return new MySession(session);
     }
 
 }
