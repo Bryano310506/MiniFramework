@@ -179,7 +179,7 @@ public class MethodManager {
     }
 
     // contrainte nom attribut input == nom parametre
-    public static Map<Parameter, List<?>> matchingParameter(MethodTarget mt, HttpServletRequest request) {
+    public static Map<Parameter, List<?>> matchingParameter(MethodTarget mt, HttpServletRequest request, MySession session) {
         Map<String, String[]> params = request.getParameterMap();
         Map<Parameter, List<?>> result = new HashMap<>();
 
@@ -187,7 +187,7 @@ public class MethodManager {
             List<Object> listValeur = new ArrayList<>();
 
             if (p.getType() == MySession.class) {
-                listValeur.add(toMySession(request));
+                listValeur.add(session);
             }
             
             if (Utilitaire.valeurParDefaut(p.getType()) != null) {
@@ -212,7 +212,7 @@ public class MethodManager {
         return result;
     }
 
-    public static Map<Parameter, List<?>> matchingMultipartParameter(MethodTarget mt, HttpServletRequest request)
+    public static Map<Parameter, List<?>> matchingMultipartParameter(MethodTarget mt, HttpServletRequest request, MySession session)
             throws IOException, ServletException {
         Map<Parameter, List<?>> result = new HashMap<>();
 
@@ -228,7 +228,7 @@ public class MethodManager {
                 }
             } 
             else if (parameter.getType() == MySession.class) {
-                values.add(toMySession(request));
+                values.add(session);
             }
             else if (Utilitaire.valeurParDefaut(parameter.getType()) != null) {
                 String[] parameterValues = request.getParameterValues(parameterName);
@@ -260,11 +260,6 @@ public class MethodManager {
         file.setExtension(extensionIndex > 0 ? fileName.substring(extensionIndex + 1) : "");
         file.setFichiers(part.getInputStream().readAllBytes());
         return file;
-    }
-
-    private static MySession toMySession(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        return new MySession(session);
     }
 
 }
