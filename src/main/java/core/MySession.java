@@ -1,10 +1,14 @@
 package main.java.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import jakarta.servlet.http.HttpSession;
 
 public class MySession {
     private String sessionId;
@@ -32,6 +36,14 @@ public class MySession {
         this.createdTime = System.currentTimeMillis();
         this.limitedTime = 1800;
         this.attributes = new HashMap<>();
+    }
+
+    public MySession(HttpSession session) {
+        this.sessionId = session.getId();
+        this.createdTime = System.currentTimeMillis();
+        this.limitedTime = 1800;
+        this.attributes = new HashMap<>();
+        getAttributFormHttpSession(session);
     }
 
     public String getSessionId() {
@@ -99,5 +111,14 @@ public class MySession {
         }
         return list;
     } 
+
+    public void getAttributFormHttpSession(HttpSession session) {
+        Enumeration<String> atttributeNames = session.getAttributeNames();
+        List<String> list = Collections.list(atttributeNames);
+        for(String attr : list) {
+            Object value = session.getAttribute(attr);
+            this.addAttribute(attr, value);
+        }
+    }
 
 }
