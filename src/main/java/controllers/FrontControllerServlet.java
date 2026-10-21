@@ -25,22 +25,23 @@ import main.java.annotation.WebAPI;
 import main.java.core.GlobalConfig;
 import main.java.core.MethodTarget;
 import main.java.core.ModelAndView;
+import main.java.core.MySession;
 import main.java.exception.UrlMappingException;
 import main.java.utils.MethodManager;
+import main.java.utils.SessionManager;
 import main.java.utils.ViewManager;
 
 @MultipartConfig
 public class FrontControllerServlet extends HttpServlet {
     GlobalConfig globalConfig;
+    SessionManager sessionManager;
     String suffix;
     String prefix;
-    String downloadPath;
 
     public void init() throws ServletException {
         globalConfig = (GlobalConfig) getServletContext().getAttribute("globalConfig");
         this.prefix = getInitParameter("prefix");
         this.suffix = getInitParameter("suffix");
-        this.downloadPath = getInitParameter("downloadPath");
     }
     
     @Override
@@ -92,12 +93,21 @@ public class FrontControllerServlet extends HttpServlet {
             Method m = methodTarget.getMethod();
 
             try {
+                // gestion des sessions
+                this.sessionManager = (SessionManager) getServletContext().getAttribute("sessionManager");
+                String sessionId = req.getSession().getId();
+                MySession session = this.sessionManager.createSession(sessionId);
+
+                if (session == null) {
+                    session = this.sessionManager.createSession(sessionId);
+                }
+
                 // Analyse du requete et Recuperation des parametres de methodes associee
                 Map<Parameter, List<?>> matchingMap;
                 if (isMultipartRequest(req)) {
-                    matchingMap = MethodManager.matchingMultipartParameter(methodTarget, req);
+                    matchingMap = MethodManager.matchingMultipartParameter(methodTarget, req, session);
                 } else {
-                    matchingMap = MethodManager.matchingParameter(methodTarget, req);
+                    matchingMap = MethodManager.matchingParameter(methodTarget, req, session);
                 }
 
                 Object[] args = MethodManager.getAllArgsValue(methodTarget, matchingMap);
