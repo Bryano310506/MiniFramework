@@ -172,7 +172,8 @@ public class MethodManager {
     }
 
     // contrainte nom attribut input == nom parametre
-    public static Map<Parameter, List<?>> matchingParameter(MethodTarget mt, Map<String, String[]> params) {
+    public static Map<Parameter, List<?>> matchingParameter(MethodTarget mt, HttpServletRequest request) {
+        Map<String, String[]> params = request.getParameterMap();
         Map<Parameter, List<?>> result = new HashMap<>();
 
         for (Parameter p : mt.getMethod().getParameters()) {
