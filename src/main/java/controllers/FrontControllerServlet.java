@@ -61,14 +61,14 @@ public class FrontControllerServlet extends HttpServlet {
         String uri = req.getRequestURI();
         PrintWriter out = res.getWriter();
 
-        // filtre des requetes
+        // ===== Filtre des requetes =====
         filterRequest(req, res, uri);
 
         Map<String, MethodTarget> showListFind = new HashMap<>();
         Map<String, MethodTarget> showListAll = new HashMap<>();
         Map<String, List<String>> map = new HashMap<>();
 
-        // recuperation des methodes
+        // ===== Recuperation des methodes =====
         try {
             String methodHttp = req.getMethod();
             showListAll = MethodManager.filterMethodWithAnnotationAndHttpMethod(globalConfig.getListMethods(), methodHttp);
@@ -77,7 +77,8 @@ public class FrontControllerServlet extends HttpServlet {
             out.println(e.getMessage());
         }
 
-        // affichage
+        // ===== Logique =====
+        // Si la liste des methodes associee a l'Endpoint sont vides
         if(showListFind.isEmpty()) {
             out.println("Aucun Method est associé à cette endpoint");
             out.println("\n");
@@ -91,21 +92,25 @@ public class FrontControllerServlet extends HttpServlet {
             Method m = methodTarget.getMethod();
 
             try {
+                // Analyse du requete et Recuperation des parametres de methodes associee
                 Map<Parameter, List<?>> matchingMap;
                 if (isMultipartRequest(req)) {
                     matchingMap = MethodManager.matchingMultipartParameter(methodTarget, req);
                 } else {
-                    Map<String, String[]> paramsForm = req.getParameterMap();
-                    matchingMap = MethodManager.matchingParameter(methodTarget, paramsForm);
+                    matchingMap = MethodManager.matchingParameter(methodTarget, req);
                 }
+
                 Object[] args = MethodManager.getAllArgsValue(methodTarget, matchingMap);
                 Object result = MethodManager.executeMethod(methodTarget, args); 
                 
+                // Renvoie une affichage
                 if (result instanceof ModelAndView) {
                     ModelAndView mv = (ModelAndView) result;
                     
                     this.flush(req, res, mv);
-                } else if(m.isAnnotationPresent(WebAPI.class)) {
+                } 
+                // Renvoie une JSON
+                else if(m.isAnnotationPresent(WebAPI.class)) {
                     res.setContentType("application/json");
                     res.setCharacterEncoding("UTF-8");
                     
@@ -115,7 +120,9 @@ public class FrontControllerServlet extends HttpServlet {
                     
                     String json = gson.toJson(result);
                     res.getWriter().write(json);
-                } else {
+                } 
+                // Affichage par default
+                else {
                     map = MethodManager.getInformationMethod(showListFind);
                     out.println("L'URL a été trouvée, mais la méthode n'a pas retourné un ModelAndView.");
                     out.println("Type retourné : " + (result != null ? result.getClass().getName() : "void"));
