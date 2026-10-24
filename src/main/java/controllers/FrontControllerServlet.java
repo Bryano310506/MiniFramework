@@ -21,6 +21,7 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import main.java.annotation.Auth;
 import main.java.annotation.WebAPI;
 import main.java.core.GlobalConfig;
 import main.java.core.MethodTarget;
@@ -37,11 +38,13 @@ public class FrontControllerServlet extends HttpServlet {
     SessionManager sessionManager;
     String suffix;
     String prefix;
+    String authentification;
 
     public void init() throws ServletException {
         globalConfig = (GlobalConfig) getServletContext().getAttribute("globalConfig");
         this.prefix = getInitParameter("prefix");
         this.suffix = getInitParameter("suffix");
+        this.authentification = getInitParameter("authentification");
     }
     
     @Override
@@ -111,7 +114,18 @@ public class FrontControllerServlet extends HttpServlet {
                 }
 
                 Object[] args = MethodManager.getAllArgsValue(methodTarget, matchingMap);
-                Object result = MethodManager.executeMethod(methodTarget, args); 
+                Object result = null;
+
+                if (m.isAnnotationPresent(Auth.class)) {
+                    if (isAuthenticated(session)) {
+                        result = MethodManager.executeMethod(methodTarget, args);
+                    } else {
+                        result = "Accès refusé : Authentification requise.";
+                    }
+                }
+                else {
+                    result = MethodManager.executeMethod(methodTarget, args);
+                }
                 
                 // Renvoie une affichage
                 if (result instanceof ModelAndView) {
@@ -149,6 +163,19 @@ public class FrontControllerServlet extends HttpServlet {
     private boolean isMultipartRequest(HttpServletRequest req) {
         String contentType = req.getContentType();
         return contentType != null && contentType.toLowerCase().startsWith("multipart/");
+    }
+
+    private boolean isAuthenticated(MySession session) {
+        if (authentification == null || authentification.isEmpty()) {
+            return false;
+        }
+
+        for (String attributeName : session.getAllAttributeNames()) {
+            if (attributeName.contains(authentification)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void flush(HttpServletRequest req, HttpServletResponse res, ModelAndView mv) 

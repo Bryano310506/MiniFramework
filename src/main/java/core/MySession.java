@@ -3,10 +3,10 @@ package main.java.core;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -21,28 +21,28 @@ public class MySession {
         this.sessionId = sessionId;
         this.createdTime = System.currentTimeMillis();
         this.limitedTime = limitedTime;
-        this.attributes = attributes;
+        this.attributes = new ConcurrentHashMap<>(attributes);
     }
 
     public MySession(String sessionId, Map<String, Object> attributes) {
         this.sessionId = sessionId;
         this.createdTime = System.currentTimeMillis();
         this.limitedTime = 1800;
-        this.attributes = attributes;
+        this.attributes = new ConcurrentHashMap<>(attributes);
     }
 
     public MySession(String sessionId) {
         this.sessionId = sessionId;
         this.createdTime = System.currentTimeMillis();
         this.limitedTime = 1800;
-        this.attributes = new HashMap<>();
+        this.attributes = new ConcurrentHashMap<>();
     }
 
     public MySession(HttpSession session) {
         this.sessionId = session.getId();
         this.createdTime = System.currentTimeMillis();
         this.limitedTime = 1800;
-        this.attributes = new HashMap<>();
+        this.attributes = new ConcurrentHashMap<>();
         getAttributFormHttpSession(session);
     }
 
@@ -86,7 +86,7 @@ public class MySession {
 
     public boolean isExpired() {
         long maintenant = System.currentTimeMillis();
-        return (maintenant - createdTime) > limitedTime;
+        return (maintenant - createdTime) > (limitedTime * 1000);
     }
 
     public void addAttribute(String key, Object value) {

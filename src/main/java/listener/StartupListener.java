@@ -9,7 +9,6 @@ import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import main.java.annotation.Controller;
 import main.java.core.GlobalConfig;
-import main.java.core.MySession;
 import main.java.utils.ClassManager;
 import main.java.utils.MethodManager;
 import main.java.utils.SessionManager;

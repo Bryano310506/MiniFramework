@@ -1,13 +1,12 @@
 package main.java.utils;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import main.java.core.MySession;
 
 public class SessionManager {
-    private Map<String, MySession> activeSessions = new ConcurrentHashMap<>();
+    private final Map<String, MySession> activeSessions = new ConcurrentHashMap<>();
 
     public MySession getSession(String sessionId) {
         if (sessionId == null) return null;
@@ -24,9 +23,18 @@ public class SessionManager {
     }
 
     public MySession createSession(String sessionId) {
-        MySession newSession = new MySession(sessionId, new HashMap<>());
-        activeSessions.put(sessionId, newSession);
-        return newSession;
+        if (sessionId == null) return null;
+
+        return activeSessions.compute(sessionId, (id, currentSession) -> {
+            if (currentSession != null && !currentSession.isExpired()) {
+                return currentSession;
+            }
+
+            if (currentSession != null) {
+                currentSession.destroy();
+            }
+            return new MySession(id);
+        });
     }
 
     public void removeSession(String sessionId) {
