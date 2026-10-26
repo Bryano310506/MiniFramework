@@ -39,12 +39,16 @@ public class FrontControllerServlet extends HttpServlet {
     String suffix;
     String prefix;
     String authentification;
+    String role;
+    String separator;
 
     public void init() throws ServletException {
         globalConfig = (GlobalConfig) getServletContext().getAttribute("globalConfig");
         this.prefix = getInitParameter("prefix");
         this.suffix = getInitParameter("suffix");
         this.authentification = getInitParameter("authentification");
+        this.role = getInitParameter("role");
+        this.separator = getInitParameter("separator");
     }
     
     @Override
@@ -118,7 +122,19 @@ public class FrontControllerServlet extends HttpServlet {
 
                 if (m.isAnnotationPresent(Auth.class)) {
                     if (isAuthenticated(session)) {
-                        result = MethodManager.executeMethod(methodTarget, args);
+                        Auth auth = m.getAnnotation(Auth.class);
+                        String roles = auth.role();
+
+                        if(roles.isBlank() || roles.equals("")) {
+                            result = MethodManager.executeMethod(methodTarget, args);
+                        }
+                        else if(isAuthorisedRole(session, roles)) {
+                            result = MethodManager.executeMethod(methodTarget, args);
+                        }
+                        else {
+                            result = "Accès refusé : Role requise.";
+                        }
+
                     } else {
                         result = "Accès refusé : Authentification requise.";
                     }
@@ -163,6 +179,16 @@ public class FrontControllerServlet extends HttpServlet {
     private boolean isMultipartRequest(HttpServletRequest req) {
         String contentType = req.getContentType();
         return contentType != null && contentType.toLowerCase().startsWith("multipart/");
+    }
+
+    private boolean isAuthorisedRole(MySession session, String authRole) {
+        String[] splitedRole = authRole.split(this.separator.trim());
+        for(String s : splitedRole) {
+            if(s.trim().equals(session.getAttribute(this.role.trim()))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isAuthenticated(MySession session) {
