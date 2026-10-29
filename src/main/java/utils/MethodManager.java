@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.Part;
 
 import main.java.annotation.UrlMapping;
+import main.java.context.ApplicationContext;
 import main.java.core.FileTarget;
 import main.java.core.HttpMethod;
 import main.java.core.MethodTarget;
@@ -30,7 +31,7 @@ public class MethodManager {
 
     public static Object executeMethod(MethodTarget mt, Object[] args) 
             throws Exception {
-        Object instance = mt.getClazz().getConstructor().newInstance();
+        Object instance = ApplicationContext.getBean(mt.getClazz());
         return mt.getMethod().invoke(instance, args);
     }
 
